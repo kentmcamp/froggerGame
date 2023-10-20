@@ -21,7 +21,7 @@ public class Game extends JFrame implements KeyListener {
   // Variables
   private Container content;
   private Car[][] cars = new Car[4][3];
-  // private Log[][] logs = new Log[4][3];
+  private Log[][] logs = new Log[4][3];
 
   // Frogger
   private Frogger frogger;
@@ -47,14 +47,17 @@ public class Game extends JFrame implements KeyListener {
 
   public Game() {
     content = getContentPane(); // Initialize the content pane
+    
+    playerStart();
 
     initializeCars(4, 270, 200, 100, 0, "bike.gif");
     initializeCars(4, 400, 200, 200, 1, "car2.gif");
     initializeCars(4, 470, 200, 400, 2, "car.gif");
 
+    initializeLogs(4, 80, 100, 0);
+    initializeLogs(4, 144, 200, 1);
+    initializeLogs(4, 208, 300, 2);
 
-
-    playerStart();
     background();
 
     // Add key listener
@@ -178,7 +181,44 @@ public class Game extends JFrame implements KeyListener {
     cars[indexNumber][row] = car;
   }
 
-  // Key Listener Methods
+  public void initializeLogs(int rowSize, int height, int speed, int row) {
+    for (int i = 0; i < rowSize; i++) {
+      int xSpace = i * 200;
+      logStart(xSpace, height, speed, i, row);
+    }
+  }
+
+  public void logStart(int xSpace, int posY, int speed, int indexNumber, int row) {
+    // Log Setup
+    Log log = new Log(xSpace, posY, 64, 32, "log.gif", true, speed);
+
+    // Set Image
+    log.setImage("log.gif");
+    JLabel logLabel = new JLabel();
+    ImageIcon logImage = new ImageIcon(
+      getClass().getResource("images/" + log.getImage())
+    );
+
+    // Set label properties
+    logLabel.setIcon(logImage);
+    logLabel.setSize(log.getWidth(), log.getHeight());
+    logLabel.setLocation(log.getPosX(), log.getPosY());
+    log.setLogLabel(logLabel);
+
+    // Set speed
+    log.setSpeed(speed);
+
+    // Add log to content pane
+    log.setIsMoving(true);
+    log.startThread();
+    content.add(logLabel);
+
+    // Add log to array
+    logs[indexNumber][row] = log;
+    
+  }
+
+// ---CONTROLS AND COLLISION---
   @Override
   public void keyTyped(KeyEvent e) {}
 
@@ -278,6 +318,7 @@ public class Game extends JFrame implements KeyListener {
   }
 }
 
+// ---AUDIO---
   public void initializeAudio() {
     try {
       // Background Music

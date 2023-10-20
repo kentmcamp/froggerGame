@@ -54,7 +54,6 @@ public class Car extends Sprite implements Runnable
     public void startThread()
      {
         this.isMoving = true;
-        this.speed = speed;
         thread = new Thread(this, "Car Thread");
         thread.start();
     }
@@ -89,10 +88,7 @@ public class Car extends Sprite implements Runnable
             if (x > GameProperties.SCREEN_WIDTH + 32) { // If car is off screen + 32 pixels
                 x = -this.getWidth(); // Reset x position
                 this.setPosX(x); // Set new x position
-            } else
-
-
-            if (x < -this.getWidth() - 32) { // If car is off screen + 32 pixels
+            } else if (x < -this.getWidth() - 32) { // If car is off screen + 32 pixels
                 x = GameProperties.SCREEN_WIDTH; // Reset x position
                 this.setPosX(x); // Set new x position
             }
@@ -107,6 +103,9 @@ public class Car extends Sprite implements Runnable
 
 
         }
+
+        throw new UnsupportedOperationException("Unimplemented method 'run'");
+
     }
 
 }
