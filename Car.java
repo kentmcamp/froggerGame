@@ -54,6 +54,7 @@ public class Car extends Sprite implements Runnable
     public void startThread()
      {
         this.isMoving = true;
+        this.speed = speed;
         thread = new Thread(this, "Car Thread");
         thread.start();
     }

@@ -31,10 +31,13 @@ public class Game extends JFrame implements KeyListener {
   // For Game Loop
   private boolean isGameOver = false;
   private boolean controlsEnabled = true;
+  private boolean isCollisionDetected = false;
 
   // Audio
   private Clip backgroundMusic;
   private Clip deathSound;
+  private Clip moveSound;
+  // private Clip winSound;
 
   public static void main(String[] args) {
     Game game = new Game();
@@ -188,10 +191,12 @@ public class Game extends JFrame implements KeyListener {
 
       // On KeyEvent, update Frogger's position by 1 character step
       if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) {
+        playMoveSound();
         y -= GameProperties.CHARACTER_STEP;
       } else if (
         e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S
       ) {
+        playMoveSound();
         // Boundary Check for bottom
         if (y >= 530) {
           return;
@@ -200,6 +205,7 @@ public class Game extends JFrame implements KeyListener {
       } else if (
         e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A
       ) {
+        playMoveSound();
         // Boundary Check for left
         if (x <= 32) {
           return;
@@ -208,6 +214,7 @@ public class Game extends JFrame implements KeyListener {
       } else if (
         e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D
       ) {
+        playMoveSound();
         // Boundary Check for right
         if (x >= 580) {
           return;
@@ -229,13 +236,13 @@ public class Game extends JFrame implements KeyListener {
   public void keyReleased(KeyEvent e) {}
 
   public void checkCollision() {
+    if (!isCollisionDetected) {
     Rectangle froggerRectangle = frogger.getRectangle();
-
     for (Car[] carRow : cars) {
       for (Car car : carRow) {
         if (froggerRectangle.intersects(car.getRectangle())) {
+          isCollisionDetected = true;
           System.out.println("Collision Detected");
-          // isGameOver = true; // This fixes multiple collisions issues, but causes collision to no longer be detected
           controlsEnabled = false;
           playDeathSound();
 
@@ -259,6 +266,7 @@ public class Game extends JFrame implements KeyListener {
               frogger.setPosY(530);
               froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
               controlsEnabled = true;
+              isCollisionDetected = false;
             }
           };
 
@@ -268,6 +276,7 @@ public class Game extends JFrame implements KeyListener {
       }
     }
   }
+}
 
   public void initializeAudio() {
     try {
@@ -286,6 +295,10 @@ public class Game extends JFrame implements KeyListener {
       deathSound.open(audioInputStream);
 
       // Move Sound
+      File moveSoundFile = new File("audio/move.wav");
+      audioInputStream = AudioSystem.getAudioInputStream(moveSoundFile);
+      moveSound = AudioSystem.getClip();
+      moveSound.open(audioInputStream);
 
       // Win Sound
 
@@ -302,6 +315,11 @@ public class Game extends JFrame implements KeyListener {
     if (backgroundMusic != null) {
       backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
     }
+  }
+
+  public void playMoveSound() {
+    moveSound.setFramePosition(0);
+    moveSound.start();
   }
 
   public void playDeathSound() {
