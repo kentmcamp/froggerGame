@@ -78,7 +78,9 @@ public class Game extends JFrame implements KeyListener {
         public void run() {
           while (!isGameOver) {
             checkCollision();
-
+            if (isFroggerAtRiver() && !isCollisionDetected) {
+              System.out.println("Frogger is at river");
+            }
             // Frame Rate
             try {
               Thread.sleep(10);
@@ -315,8 +317,66 @@ public class Game extends JFrame implements KeyListener {
         }
       }
     }
-  }
+
+    // Log Collision
+    boolean isFroggerOnLog = false;
+    for (Log[] logRow : logs) {
+      for (Log log : logRow) {
+        if (froggerRectangle.intersects(log.getRectangle())) {
+          isFroggerOnLog = true;
+          frogger.setPosX(log.getPosX());
+          froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+          break;
+        }
+      }
+      if (isFroggerOnLog) {
+        break;
+      }
+    }
+
+    // Check if frogger is in river but not on log
+    if (isFroggerAtRiver() && !isFroggerOnLog) {
+      isCollisionDetected = true;
+      System.out.println("Fogger is drowning!");
+      controlsEnabled = false;
+      playDeathSound();
+
+      // Change Frogger Image
+      frogger.setImage("aniFrogRed.gif");
+      ImageIcon deadFrogger = new ImageIcon(
+        getClass().getResource("images/" + frogger.getImage())
+      );
+      froggerLabel.setIcon(deadFrogger);
+
+      // Reset Frogger (in timer) to give time for death animation and sound to play
+      TimerTask task = new TimerTask() {
+        public void run() {
+          System.out.println("Resetting Frogger");
+          frogger.setImage("aniFrog.gif");
+          ImageIcon normalFrogger = new ImageIcon(
+            getClass().getResource("images/" + frogger.getImage())
+          );
+          froggerLabel.setIcon(normalFrogger);
+          frogger.setPosX(300);
+          frogger.setPosY(530);
+          froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+          controlsEnabled = true;
+          isCollisionDetected = false;
+        }
+      };
+
+      Timer timer = new Timer();
+      timer.schedule(task, 300);
+
+      }
+    }
+
+  
 }
+
+  public boolean isFroggerAtRiver() {
+    return (frogger.getPosY() >= 80 && frogger.getPosY() <= 240);
+  }
 
 // ---AUDIO---
   public void initializeAudio() {
