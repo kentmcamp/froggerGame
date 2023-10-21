@@ -37,6 +37,7 @@ public class Game extends JFrame implements KeyListener {
   private Clip backgroundMusic;
   private Clip deathSound;
   private Clip moveSound;
+
   // private Clip winSound;
 
   public static void main(String[] args) {
@@ -47,16 +48,16 @@ public class Game extends JFrame implements KeyListener {
 
   public Game() {
     content = getContentPane(); // Initialize the content pane
-    
+
     playerStart();
 
     initializeCars(4, 270, 200, 100, 0, "bike.gif");
     initializeCars(4, 400, 200, 200, 1, "car2.gif");
     initializeCars(4, 470, 200, 400, 2, "car.gif");
 
-    initializeLogs(4, 80, 100, 0);
-    initializeLogs(4, 144, 200, 1);
-    initializeLogs(4, 208, 300, 2);
+    initializeLogs(4, 80, 200, 0);
+    initializeLogs(4, 144, 400, 1);
+    initializeLogs(4, 208, 800, 2);
 
     background();
 
@@ -78,10 +79,6 @@ public class Game extends JFrame implements KeyListener {
         public void run() {
           while (!isGameOver) {
             checkCollision();
-            if (isFroggerAtRiver() && !isCollisionDetected) {
-              System.out.println("Frogger is at river");
-            }
-            // Frame Rate
             try {
               Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -97,7 +94,7 @@ public class Game extends JFrame implements KeyListener {
   public void background() {
     // Create image icon for background
     ImageIcon background = new ImageIcon(
-      getClass().getResource("images/background.gif")
+      getClass().getResource("images/background.png")
     );
     // Scale image to fit screen
     background.setImage(
@@ -127,6 +124,15 @@ public class Game extends JFrame implements KeyListener {
     setResizable(false);
     setLocationRelativeTo(null);
     content.setFocusable(true);
+
+    // Frogger JFame Icon
+    ImageIcon froggerIcon = new ImageIcon(getClass().getResource("images/frogIcon.png"));
+    if (froggerIcon.getImage() != null) {
+      setIconImage(froggerIcon.getImage());
+      System.out.println("Image loaded successfully.");
+    } else {
+      System.out.println("Image not loaded.");
+  }
 
     // Add background label to content pane
     content.add(backgroundLabel);
@@ -190,7 +196,13 @@ public class Game extends JFrame implements KeyListener {
     }
   }
 
-  public void logStart(int xSpace, int posY, int speed, int indexNumber, int row) {
+  public void logStart(
+    int xSpace,
+    int posY,
+    int speed,
+    int indexNumber,
+    int row
+  ) {
     // Log Setup
     Log log = new Log(xSpace, posY, 64, 32, "log.gif", true, speed);
 
@@ -217,10 +229,9 @@ public class Game extends JFrame implements KeyListener {
 
     // Add log to array
     logs[indexNumber][row] = log;
-    
   }
 
-// ---CONTROLS AND COLLISION---
+  // ---CONTROLS AND COLLISION---
   @Override
   public void keyTyped(KeyEvent e) {}
 
@@ -279,106 +290,103 @@ public class Game extends JFrame implements KeyListener {
 
   public void checkCollision() {
     if (!isCollisionDetected) {
-    Rectangle froggerRectangle = frogger.getRectangle();
-    for (Car[] carRow : cars) {
-      for (Car car : carRow) {
-        if (froggerRectangle.intersects(car.getRectangle())) {
-          isCollisionDetected = true;
-          System.out.println("Collision Detected");
-          controlsEnabled = false;
-          playDeathSound();
+      Rectangle froggerRectangle = frogger.getRectangle();
+      for (Car[] carRow : cars) {
+        for (Car car : carRow) {
+          if (froggerRectangle.intersects(car.getRectangle())) {
+            isCollisionDetected = true;
+            System.out.println("Collision Detected");
+            controlsEnabled = false;
+            playDeathSound();
 
-          // Change Frogger Image
-          frogger.setImage("aniFrogRed.gif");
-          ImageIcon deadFrogger = new ImageIcon(
-            getClass().getResource("images/" + frogger.getImage())
-          );
-          froggerLabel.setIcon(deadFrogger);
+            // Change Frogger Image
+            frogger.setImage("aniFrogRed.gif");
+            ImageIcon deadFrogger = new ImageIcon(
+              getClass().getResource("images/" + frogger.getImage())
+            );
+            froggerLabel.setIcon(deadFrogger);
 
-          // Reset Frogger (in timer) to give time for death animation and sound to play
-          TimerTask task = new TimerTask() {
-            public void run() {
-              System.out.println("Resetting Frogger");
-              frogger.setImage("aniFrog.gif");
-              ImageIcon normalFrogger = new ImageIcon(
-                getClass().getResource("images/" + frogger.getImage())
-              );
-              froggerLabel.setIcon(normalFrogger);
-              frogger.setPosX(300);
-              frogger.setPosY(530);
-              froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
-              controlsEnabled = true;
-              isCollisionDetected = false;
-            }
-          };
+            // Reset Frogger (in timer) to give time for death animation and sound to play
+            TimerTask task = new TimerTask() {
+              public void run() {
+                System.out.println("Resetting Frogger");
+                frogger.setImage("aniFrog.gif");
+                ImageIcon normalFrogger = new ImageIcon(
+                  getClass().getResource("images/" + frogger.getImage())
+                );
+                froggerLabel.setIcon(normalFrogger);
+                frogger.setPosX(300);
+                frogger.setPosY(530);
+                froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+                controlsEnabled = true;
+                isCollisionDetected = false;
+              }
+            };
 
-          Timer timer = new Timer();
-          timer.schedule(task, 300);
+            Timer timer = new Timer();
+            timer.schedule(task, 300);
+          }
         }
       }
-    }
 
-    // Log Collision
-    boolean isFroggerOnLog = false;
-    for (Log[] logRow : logs) {
-      for (Log log : logRow) {
-        if (froggerRectangle.intersects(log.getRectangle())) {
-          isFroggerOnLog = true;
-          frogger.setPosX(log.getPosX());
-          froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+      // Log Collision
+      boolean isFroggerOnLog = false;
+      for (Log[] logRow : logs) {
+        for (Log log : logRow) {
+          if (froggerRectangle.intersects(log.getRectangle())) {
+            isFroggerOnLog = true;
+            frogger.setPosX(log.getPosX());
+            froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+            break;
+          }
+        }
+        if (isFroggerOnLog) {
           break;
         }
       }
-      if (isFroggerOnLog) {
-        break;
+
+      // Check if frogger is in river but not on log
+      if (isFroggerAtRiver() && !isFroggerOnLog) {
+        isCollisionDetected = true;
+        System.out.println("Fogger is drowning!");
+        controlsEnabled = false;
+        playDeathSound();
+
+        // Change Frogger Image
+        frogger.setImage("aniFrogRed.gif");
+        ImageIcon deadFrogger = new ImageIcon(
+          getClass().getResource("images/" + frogger.getImage())
+        );
+        froggerLabel.setIcon(deadFrogger);
+
+        // Reset Frogger (in timer) to give time for death animation and sound to play
+        TimerTask task = new TimerTask() {
+          public void run() {
+            System.out.println("Resetting Frogger");
+            frogger.setImage("aniFrog.gif");
+            ImageIcon normalFrogger = new ImageIcon(
+              getClass().getResource("images/" + frogger.getImage())
+            );
+            froggerLabel.setIcon(normalFrogger);
+            frogger.setPosX(300);
+            frogger.setPosY(530);
+            froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+            controlsEnabled = true;
+            isCollisionDetected = false;
+          }
+        };
+
+        Timer timer = new Timer();
+        timer.schedule(task, 300);
       }
     }
-
-    // Check if frogger is in river but not on log
-    if (isFroggerAtRiver() && !isFroggerOnLog) {
-      isCollisionDetected = true;
-      System.out.println("Fogger is drowning!");
-      controlsEnabled = false;
-      playDeathSound();
-
-      // Change Frogger Image
-      frogger.setImage("aniFrogRed.gif");
-      ImageIcon deadFrogger = new ImageIcon(
-        getClass().getResource("images/" + frogger.getImage())
-      );
-      froggerLabel.setIcon(deadFrogger);
-
-      // Reset Frogger (in timer) to give time for death animation and sound to play
-      TimerTask task = new TimerTask() {
-        public void run() {
-          System.out.println("Resetting Frogger");
-          frogger.setImage("aniFrog.gif");
-          ImageIcon normalFrogger = new ImageIcon(
-            getClass().getResource("images/" + frogger.getImage())
-          );
-          froggerLabel.setIcon(normalFrogger);
-          frogger.setPosX(300);
-          frogger.setPosY(530);
-          froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
-          controlsEnabled = true;
-          isCollisionDetected = false;
-        }
-      };
-
-      Timer timer = new Timer();
-      timer.schedule(task, 300);
-
-      }
-    }
-
-  
-}
+  }
 
   public boolean isFroggerAtRiver() {
     return (frogger.getPosY() >= 80 && frogger.getPosY() <= 240);
   }
 
-// ---AUDIO---
+  // ---AUDIO---
   public void initializeAudio() {
     try {
       // Background Music
@@ -400,7 +408,6 @@ public class Game extends JFrame implements KeyListener {
       audioInputStream = AudioSystem.getAudioInputStream(moveSoundFile);
       moveSound = AudioSystem.getClip();
       moveSound.open(audioInputStream);
-
       // Win Sound
 
       // High Score Fanfare (must disable background music for this)
