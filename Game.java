@@ -37,8 +37,7 @@ public class Game extends JFrame implements KeyListener {
   private Clip backgroundMusic;
   private Clip deathSound;
   private Clip moveSound;
-
-  // private Clip winSound;
+  private Clip winSound;
 
   public static void main(String[] args) {
     Game game = new Game();
@@ -345,6 +344,15 @@ public class Game extends JFrame implements KeyListener {
         }
       }
 
+      // Win Condition if Frogger is past river
+      if (frogger.getPosY() <= 80 && isGameOver == false) {
+        System.out.println("Victory!");
+        // Play Win Sound
+        playWinSound();
+
+        // Reset Frogger
+      }
+
       // Check if frogger is in river but not on log
       if (isFroggerAtRiver() && !isFroggerOnLog) {
         isCollisionDetected = true;
@@ -408,7 +416,12 @@ public class Game extends JFrame implements KeyListener {
       audioInputStream = AudioSystem.getAudioInputStream(moveSoundFile);
       moveSound = AudioSystem.getClip();
       moveSound.open(audioInputStream);
+
       // Win Sound
+      File winSoundFile = new File("audio/victory.wav");
+      audioInputStream = AudioSystem.getAudioInputStream(winSoundFile);
+      winSound = AudioSystem.getClip();
+      winSound.open(audioInputStream);
 
       // High Score Fanfare (must disable background music for this)
 
@@ -434,6 +447,13 @@ public class Game extends JFrame implements KeyListener {
     if (!deathSound.isRunning()) {
       deathSound.setFramePosition(0);
       deathSound.start();
+    }
+  }
+
+  public void playWinSound() {
+    if (!winSound.isRunning()) {
+      winSound.setFramePosition(0);
+      winSound.start();
     }
   }
 }
