@@ -312,7 +312,7 @@ public class Game extends JFrame implements KeyListener {
         if (x <= 32) {
           return;
         }
-        x -= GameProperties.CHARACTER_STEP;
+        x -= GameProperties.CHARACTER_STEP / 2;
       } else if (
         e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D
       ) {
@@ -321,7 +321,7 @@ public class Game extends JFrame implements KeyListener {
         if (x >= 580) {
           return;
         }
-        x += GameProperties.CHARACTER_STEP;
+        x += GameProperties.CHARACTER_STEP / 2;
       } else {
         System.out.println("Invalid Key Pressed");
         return;

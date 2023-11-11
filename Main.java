@@ -199,13 +199,7 @@ public class Main extends JFrame {
                 while (resultSet.next() && i < 5) {
                     String name = resultSet.getString("NAME");
                     int score = resultSet.getInt("SCORE");
-                    scoreLabels[i].setText(String.format("%-20s%-10s", name, score));
-                    i++;
-                }
-
-                // Clear any remaining labels
-                while (i < 5) {
-                    scoreLabels[i].setText("");
+                    scoreLabels[i].setText(name + " ..... " + score);
                     i++;
                 }
             }
