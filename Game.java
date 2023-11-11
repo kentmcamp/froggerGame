@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -52,9 +53,10 @@ public class Game extends JFrame implements KeyListener {
   private Clip deathSound;
   private Clip moveSound;
   private Clip winSound;
+  private Clip highScoreSound;
 
   public static void main(String[] args) {
-    MainMenu mainMenu = new MainMenu();
+    Main mainMenu = new Main();
     mainMenu.setVisible(true);
   }
 
@@ -83,10 +85,8 @@ public class Game extends JFrame implements KeyListener {
         backgroundMusic.stop();
         saveGame();
         dispose();
-        MainMenu mainMenu = new MainMenu();
+        Main mainMenu = new Main();
         mainMenu.setVisible(true);
-
-        // System.exit(0);
       });
     content.add(quitButton);
 
@@ -168,7 +168,7 @@ public class Game extends JFrame implements KeyListener {
     setSize(GameProperties.SCREEN_WIDTH, GameProperties.SCREEN_HEIGHT);
 
     // Other JFrame properties
-    setTitle("Frogger");
+    setTitle("FROGGER");
     content.setLayout(null);
     setResizable(false);
     setLocationRelativeTo(null);
@@ -312,8 +312,7 @@ public class Game extends JFrame implements KeyListener {
         if (x <= 32) {
           return;
         }
-        // Frogger moves half of a step when moving sideways to allow some more room for movement between cars.
-        x -= GameProperties.CHARACTER_STEP / 2; 
+        x -= GameProperties.CHARACTER_STEP;
       } else if (
         e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D
       ) {
@@ -322,7 +321,7 @@ public class Game extends JFrame implements KeyListener {
         if (x >= 580) {
           return;
         }
-        x += GameProperties.CHARACTER_STEP / 2;
+        x += GameProperties.CHARACTER_STEP;
       } else {
         System.out.println("Invalid Key Pressed");
         return;
@@ -483,6 +482,12 @@ public class Game extends JFrame implements KeyListener {
       winSound = AudioSystem.getClip();
       winSound.open(audioInputStream);
 
+      // High Score Sound
+      File highScoreSoundFile = new File("audio/highScore.wav");
+      audioInputStream = AudioSystem.getAudioInputStream(highScoreSoundFile);
+      highScoreSound = AudioSystem.getClip();
+      highScoreSound.open(audioInputStream);
+
     } catch (
       UnsupportedAudioFileException | IOException | LineUnavailableException e
     ) {
@@ -515,12 +520,19 @@ public class Game extends JFrame implements KeyListener {
     }
   }
 
+  public void playHighScoreSound() {
+    if (!highScoreSound.isRunning()) {
+      highScoreSound.setFramePosition(0);
+      highScoreSound.start();
+    }
+  }
+
   // ---DATABASE ---
   public void saveGame() {
     // Get Name
     String name = JOptionPane.showInputDialog("Enter your name: ");
     if (name == null) {
-      System.out.println("Pleae enter a name");
+      System.out.println("Please enter a name");
       return;
     }
 
@@ -547,12 +559,10 @@ public class Game extends JFrame implements KeyListener {
         // disable auto commit
         conn.setAutoCommit(false);
 
-        // get db metadata
-        // DatabaseMetaData db = (DatabaseMetaData) conn.getMetaData();
-
         // create a table statement and execute it
         stmt = conn.createStatement();
 
+        // Check if table exists and create it if it doesn't
         String sql = "";
         sql += "CREATE TABLE IF NOT EXISTS SCORES ";
         sql += "(ID INTEGER PRIMARY KEY AUTOINCREMENT, ";
@@ -568,6 +578,18 @@ public class Game extends JFrame implements KeyListener {
         sql += "VALUES ('" + name + "', " + points + ", '" + date + "')";
         stmt.executeUpdate(sql);
         conn.commit();
+
+        // Check if the user's score is in the top 5
+        String compareScores = "SELECT COUNT(*) FROM SCORES WHERE SCORE > " + points;
+        ResultSet resultSet = stmt.executeQuery(compareScores);
+        resultSet.next();
+        int count = resultSet.getInt(1) + 1;
+
+        // If the user's score is in the top 5
+        if (count <= 5) {
+          playHighScoreSound();
+          JOptionPane.showMessageDialog(null, "CONGRATULATIONS, YOU'RE A TOP FIVE FROGGER!");
+        }
 
         // Close Connection
         conn.close();
