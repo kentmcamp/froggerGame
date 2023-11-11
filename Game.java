@@ -1,10 +1,17 @@
+import java.awt.Color;
 import java.awt.Container;
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.sound.sampled.AudioInputStream;
@@ -13,8 +20,10 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 public class Game extends JFrame implements KeyListener {
 
@@ -33,6 +42,11 @@ public class Game extends JFrame implements KeyListener {
   private boolean controlsEnabled = true;
   private boolean isCollisionDetected = false;
 
+  // GUI Elements
+  // Points for keeping score
+  private int points = 0;
+  private JLabel pointsLabel = new JLabel("Points: " + points);
+
   // Audio
   private Clip backgroundMusic;
   private Clip deathSound;
@@ -40,15 +54,51 @@ public class Game extends JFrame implements KeyListener {
   private Clip winSound;
 
   public static void main(String[] args) {
-    Game game = new Game();
-    game.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    game.setVisible(true); // Display the game frame
+    MainMenu mainMenu = new MainMenu();
+    mainMenu.setVisible(true);
   }
 
   public Game() {
     content = getContentPane(); // Initialize the content pane
 
     playerStart();
+
+    // GUI Elements
+    // Points Label
+    pointsLabel.setBounds(455, 565, 160, 30);
+    pointsLabel.setOpaque(true);
+    pointsLabel.setBackground(Color.BLACK);
+    pointsLabel.setForeground(Color.WHITE);
+    content.add(pointsLabel);
+
+    // Quit and Save Button
+    JButton quitButton = new JButton("QUIT & SAVE");
+    quitButton.setFocusable(false);
+    quitButton.setBounds(10, 565, 160, 30);
+    quitButton.setOpaque(true);
+    quitButton.setBackground(Color.BLACK);
+    quitButton.setForeground(Color.WHITE);
+    quitButton.addActionListener(e -> {
+        isGameOver = true;
+        backgroundMusic.stop();
+        saveGame();
+        dispose();
+        MainMenu mainMenu = new MainMenu();
+        mainMenu.setVisible(true);
+
+        // System.exit(0);
+      });
+    content.add(quitButton);
+
+    // Change Fonts
+    try {
+      Font customFont = Font.createFont(Font.TRUETYPE_FONT, new File("retroFont.ttf"));
+      customFont = customFont.deriveFont(Font.PLAIN, 16);
+      pointsLabel.setFont(customFont);
+      quitButton.setFont(customFont);
+    } catch (FontFormatException | IOException e) {
+      e.printStackTrace();
+    }
 
     initializeCars(4, 270, 200, 100, 0, "bike.gif");
     initializeCars(4, 400, 200, 200, 1, "car2.gif");
@@ -297,7 +347,8 @@ public class Game extends JFrame implements KeyListener {
             System.out.println("Collision Detected");
             controlsEnabled = false;
             playDeathSound();
-
+            points -= 50;
+            pointsLabel.setText("Points: " + points);
             // Change Frogger Image
             frogger.setImage("aniFrogRed.gif");
             ImageIcon deadFrogger = new ImageIcon(
@@ -349,8 +400,14 @@ public class Game extends JFrame implements KeyListener {
         System.out.println("Victory!");
         // Play Win Sound
         playWinSound();
+        points += 50;
+        pointsLabel.setText("Points: " + points);
 
         // Reset Frogger
+         frogger.setPosX(300);
+          frogger.setPosY(530);
+          froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+          controlsEnabled = true;
       }
 
       // Check if frogger is in river but not on log
@@ -359,6 +416,8 @@ public class Game extends JFrame implements KeyListener {
         System.out.println("Fogger is drowning!");
         controlsEnabled = false;
         playDeathSound();
+        points -= 50;
+        pointsLabel.setText("Points: " + points);
 
         // Change Frogger Image
         frogger.setImage("aniFrogRed.gif");
@@ -394,7 +453,7 @@ public class Game extends JFrame implements KeyListener {
     return (frogger.getPosY() >= 80 && frogger.getPosY() <= 240);
   }
 
-  // ---AUDIO---
+  // -----AUDIO------
   public void initializeAudio() {
     try {
       // Background Music
@@ -422,8 +481,6 @@ public class Game extends JFrame implements KeyListener {
       audioInputStream = AudioSystem.getAudioInputStream(winSoundFile);
       winSound = AudioSystem.getClip();
       winSound.open(audioInputStream);
-
-      // High Score Fanfare (must disable background music for this)
 
     } catch (
       UnsupportedAudioFileException | IOException | LineUnavailableException e
@@ -456,4 +513,67 @@ public class Game extends JFrame implements KeyListener {
       winSound.start();
     }
   }
+
+  // ---DATABASE ---
+  public void saveGame() {
+    // Get Name
+    String name = JOptionPane.showInputDialog("Enter your name: ");
+    if (name == null) {
+      System.out.println("Pleae enter a name");
+      return;
+    }
+
+    // Get Date
+    java.util.Date utilDate = new java.util.Date();
+    java.sql.Date date = new java.sql.Date(utilDate.getTime());
+
+    // Declare a connection and a sql statement
+    Connection conn = null;
+    Statement stmt = null;
+
+    // Try
+    try {
+      // Load DB Driver
+      Class.forName("org.sqlite.JDBC");
+      System.out.println("Driver loaded successfully.");
+
+      //Create a connection string and connect to database
+      String dbURL = "jdbc:sqlite:userScores.db";
+      conn = DriverManager.getConnection(dbURL);
+
+      // if successful
+      if (conn != null) {
+        // disable auto commit
+        conn.setAutoCommit(false);
+
+        // get db metadata
+        // DatabaseMetaData db = (DatabaseMetaData) conn.getMetaData();
+
+        // create a table statement and execute it
+        stmt = conn.createStatement();
+
+        String sql = "";
+        sql += "CREATE TABLE IF NOT EXISTS SCORES ";
+        sql += "(ID INTEGER PRIMARY KEY AUTOINCREMENT, ";
+        sql += "NAME TEXT NOT NULL, ";
+        sql += "SCORE INTEGER NOT NULL, ";
+        sql += "DATE TEXT NOT NULL)";
+        stmt.executeUpdate(sql);
+        conn.commit();
+        System.out.println("Table created successfully.");
+
+        // INSERT, executeUpdate and commit
+        sql = "INSERT INTO SCORES (NAME, SCORE, DATE) ";
+        sql += "VALUES ('" + name + "', " + points + ", '" + date + "')";
+        stmt.executeUpdate(sql);
+        conn.commit();
+
+        // Close Connection
+        conn.close();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
 }
