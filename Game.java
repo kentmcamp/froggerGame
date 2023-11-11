@@ -46,7 +46,7 @@ public class Game extends JFrame implements KeyListener {
   // GUI Elements
   // Points for keeping score
   private int points = 0;
-  private JLabel pointsLabel = new JLabel("Points: " + points);
+  private JLabel pointsLabel = new JLabel("  Points: " + points);
 
   // Audio
   private Clip backgroundMusic;
@@ -334,6 +334,10 @@ public class Game extends JFrame implements KeyListener {
     }
   }
 
+  public void updatePoints() {
+    pointsLabel.setText("  Points: " + points);
+  }
+
   @Override
   public void keyReleased(KeyEvent e) {}
 
@@ -344,11 +348,11 @@ public class Game extends JFrame implements KeyListener {
         for (Car car : carRow) {
           if (froggerRectangle.intersects(car.getRectangle())) {
             isCollisionDetected = true;
-            System.out.println("Collision Detected");
+            System.out.println("Splat!");
             controlsEnabled = false;
             playDeathSound();
             points -= 50;
-            pointsLabel.setText("Points: " + points);
+            updatePoints();
             // Change Frogger Image
             frogger.setImage("aniFrogRed.gif");
             ImageIcon deadFrogger = new ImageIcon(
@@ -401,7 +405,7 @@ public class Game extends JFrame implements KeyListener {
         // Play Win Sound
         playWinSound();
         points += 50;
-        pointsLabel.setText("Points: " + points);
+       updatePoints();
 
         // Reset Frogger
          frogger.setPosX(300);
@@ -413,11 +417,11 @@ public class Game extends JFrame implements KeyListener {
       // Check if frogger is in river but not on log
       if (isFroggerAtRiver() && !isFroggerOnLog) {
         isCollisionDetected = true;
-        System.out.println("Fogger is drowning!");
+        System.out.println("Gulp!");
         controlsEnabled = false;
         playDeathSound();
         points -= 50;
-        pointsLabel.setText("Points: " + points);
+         updatePoints();
 
         // Change Frogger Image
         frogger.setImage("aniFrogRed.gif");

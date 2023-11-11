@@ -1,3 +1,4 @@
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -52,14 +53,23 @@ public class Main extends JFrame {
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         topPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         topPanel.setBackground(Color.BLACK);
-        mainContent.add(Box.createVerticalStrut(50));
-        mainContent.add(topPanel);
+        // Space
+        topPanel.add(Box.createVerticalStrut(75));
 
         JLabel titleLabel = new JLabel("FROGGER");
         titleLabel.setForeground(Color.GREEN);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         topPanel.add(titleLabel);
-        topPanel.add(Box.createVerticalGlue());
 
+        JLabel authorLabel = new JLabel("CREATED BY KENT CAMPBELL, 2023");
+        authorLabel.setForeground(Color.GREEN);
+        authorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        topPanel.add(authorLabel);
+
+        mainContent.add(topPanel, BorderLayout.NORTH);
+
+        // Space
+        mainContent.add(Box.createVerticalStrut(75));
 
         // Middle Buttons Pane
         Dimension buttonSize = new Dimension(100, 45);
@@ -134,6 +144,10 @@ public class Main extends JFrame {
             Font titleFont = Font.createFont(Font.TRUETYPE_FONT, new File("retroFont.ttf"));
             titleFont = titleFont.deriveFont(Font.PLAIN, 50);
             titleLabel.setFont(titleFont);
+
+            Font authorFont = Font.createFont(Font.TRUETYPE_FONT, new File("retroFont.ttf"));
+            authorFont = authorFont.deriveFont(Font.PLAIN, 13);
+            authorLabel.setFont(authorFont);
 
             Font buttonFont = Font.createFont(Font.TRUETYPE_FONT, new File("retroFont.ttf"));
             buttonFont = buttonFont.deriveFont(Font.PLAIN, 18);
