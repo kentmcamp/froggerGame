@@ -9,7 +9,6 @@ import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -59,7 +58,7 @@ public class Game extends JFrame implements KeyListener {
     Main mainMenu = new Main();
     mainMenu.setVisible(true);
   }
-
+    // --- GAME WINDOW AND CONTENT ---
   public Game() {
     content = getContentPane(); // Initialize the content pane
 
@@ -187,6 +186,7 @@ public class Game extends JFrame implements KeyListener {
     content.add(backgroundLabel);
   }
 
+  // ---SPRITE SPAWNING---
   public void playerStart() {
     // Frogger Setup
     frogger = new Frogger(300, 530, 32, 32, "aniFrog.gif");
@@ -389,7 +389,7 @@ public class Game extends JFrame implements KeyListener {
         for (Log log : logRow) {
           if (froggerRectangle.intersects(log.getRectangle())) {
             isFroggerOnLog = true;
-            frogger.setPosX(log.getPosX());
+            frogger.setPosX(log.getPosX() + GameProperties.LOG_SPEED);
             froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
             break;
           }
