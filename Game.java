@@ -576,6 +576,7 @@ public class Game extends JFrame implements KeyListener {
         stmt.executeUpdate(sql);
         conn.commit();
         System.out.println("Table created successfully.");
+      
 
         // INSERT, executeUpdate and commit
         sql = "INSERT INTO SCORES (NAME, SCORE, DATE) ";
