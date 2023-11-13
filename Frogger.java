@@ -1,6 +1,3 @@
-import java.util.Timer;
-import java.util.TimerTask;
-
 public class Frogger extends Sprite{
     // Constructors
     public Frogger() {

@@ -16,8 +16,7 @@ import javax.swing.border.EmptyBorder;
 
 public class Main extends JFrame {
 
-    private JLabel[] scoreLabels = new JLabel[5];
-    private Audio audio = new Audio();
+    JLabel[] scoreLabels = new JLabel[5];
 
     public Main() {
         this.setTitle("FROGGER");
@@ -27,9 +26,9 @@ public class Main extends JFrame {
         this.setLocationRelativeTo(null);
 
         // Stop High Score Music if it's playing
-        audio.stopHighScoreSound();
-        audio.initializeAudio();
-        audio.playMenuMusic();
+        Audio.stopHighScoreSound();
+        Audio.initializeAudio();
+        Audio.playMenuMusic();
 
         // Frogger JFame Icon
         ImageIcon froggerIcon = new ImageIcon(getClass().getResource("images/frogIcon.png"));
@@ -84,7 +83,7 @@ public class Main extends JFrame {
         startButton.setBackground(Color.GREEN);
         startButton.setForeground(Color.BLACK);
         startButton.addActionListener(e -> {
-            audio.stopMenuMusic();
+            Audio.stopMenuMusic();
             this.dispose();
             Game game = new Game();
         });

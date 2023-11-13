@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.IOException;
-
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -61,52 +60,52 @@ public class Audio {
             e.printStackTrace();
         }
     }
-    public void playBackgroundMusic() {
+    public static void playBackgroundMusic() {
         if (backgroundMusic != null) {
             backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
         }
     }
-    public void stopBackgroundMusic() {
+    public static void stopBackgroundMusic() {
         backgroundMusic.stop();
 
     }
 
-    public void playMoveSound() {
+    public static void playMoveSound() {
         moveSound.setFramePosition(0);
         moveSound.start();
     }
 
-    public void playDeathSound() {
+    public static void playDeathSound() {
         if (deathSound != null) {
             deathSound.setFramePosition(0);
             deathSound.start();
         }
     }
 
-    public void playWinSound() {
+    public static void playWinSound() {
         if (winSound != null) {
             winSound.setFramePosition(0);
             winSound.start();
         }
     }
 
-    public void playHighScoreSound() {
+    public static void playHighScoreSound() {
         if (highScoreSound != null) {
             highScoreSound.setFramePosition(0);
             highScoreSound.start();
         }
     }
-    public void stopHighScoreSound() {
+    public static void stopHighScoreSound() {
         if (highScoreSound != null) {
         highScoreSound.stop();
         }
     }
-    public void playMenuMusic() {
+    public static void playMenuMusic() {
         if (menuMusic != null) {
             menuMusic.loop(Clip.LOOP_CONTINUOUSLY);
         }
     }
-    public void stopMenuMusic() {
+    public static void stopMenuMusic() {
         if (menuMusic != null) {
         menuMusic.stop();
         }

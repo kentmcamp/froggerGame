@@ -14,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -42,9 +41,6 @@ public class Game implements KeyListener{
     private boolean isGameOver = false;
     private boolean isCollisionDetected = false;
     private boolean controlsEnabled = true;
-    // Audio
-    private Audio audio = new Audio();
-
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -58,15 +54,13 @@ public class Game implements KeyListener{
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setResizable(false);
         window.setLocationRelativeTo(null);
-
         window.setIconImage(getWindowIcon());
 
         // Container contentPane;
         contentPane = window.getContentPane();
 
         // Initialize Audio and Start BG Music
-        audio.initializeAudio();
-        audio.playBackgroundMusic();
+        Audio.playBackgroundMusic();
 
         // Add GUI elements to the content pane
         contentPane.add(spawnPointsLabel());
@@ -141,7 +135,7 @@ public class Game implements KeyListener{
         exitButton.setBorder(new EmptyBorder(0,0,0,0));
         exitButton.addActionListener(e -> {
             isGameOver = true;
-            audio.stopBackgroundMusic();
+            Audio.stopBackgroundMusic();
             saveGame();
             window.dispose();
             Main main = new Main();
@@ -184,7 +178,7 @@ public class Game implements KeyListener{
     }
 
     public void froggerDeath() {
-      audio.playDeathSound();
+      Audio.playDeathSound();
       froggerLabel.setIcon(new ImageIcon("images/aniFrogRed.gif"));
       updatePoints(false);
 
@@ -304,7 +298,7 @@ public class Game implements KeyListener{
 
         // Win Condition if Frogger is past river
         if (frogger.getPosY() <= 32) {
-            audio.playWinSound();
+            Audio.playWinSound();
             System.out.println("Win!");
             updatePoints(true);
             resetFrogger();
@@ -372,11 +366,11 @@ public class Game implements KeyListener{
             return;
         }
         if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) {
-          audio.playMoveSound();
+          Audio.playMoveSound();
           System.out.println("Forward Hop!");
           frogger.moveUp();
         } else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S) {
-          audio.playMoveSound();
+          Audio.playMoveSound();
           System.out.println("Back Hop!");
             // Boundary Check for Bottom
           if (frogger.getPosY() >= 490) {
@@ -385,7 +379,7 @@ public class Game implements KeyListener{
           }
           frogger.moveDown();
         } else if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {
-          audio.playMoveSound();
+          Audio.playMoveSound();
           System.out.println("Left Hop!");
             // Boundary Check for Left
           if (frogger.getPosX() <= 32) {
@@ -394,7 +388,7 @@ public class Game implements KeyListener{
           }
           frogger.moveLeft();
         } else if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D) {
-          audio.playMoveSound();
+          Audio.playMoveSound();
           System.out.println("Right Hop!");
             // Boundary Check for Right
           if (frogger.getPosX() >= 580) {
@@ -421,7 +415,7 @@ public class Game implements KeyListener{
     public void keyReleased(KeyEvent e) {}
 
      // ---DATABASE ---
-  public void saveGame() {
+    public void saveGame() {
     // Get Name
     String name = JOptionPane.showInputDialog("Enter Your Name (Cancel To Not Save Score): ");
     if (name == null) {
@@ -481,7 +475,7 @@ public class Game implements KeyListener{
 
         // If the user's score is in the top 5
         if (count <= 5) {
-          audio.playHighScoreSound();
+          Audio.playHighScoreSound();
           JOptionPane.showMessageDialog(null, "CONGRATULATIONS, YOU'RE A TOP FIVE FROGGER!");
         }
 
@@ -492,4 +486,5 @@ public class Game implements KeyListener{
       e.printStackTrace();
     }
   }
+
 }
