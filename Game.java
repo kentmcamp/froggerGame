@@ -14,527 +14,416 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Timer;
 import java.util.TimerTask;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.border.EmptyBorder;
 
-public class Game extends JFrame implements KeyListener {
+public class Game implements KeyListener{
 
-  // Variables
-  private Container content;
-  private Car[][] cars = new Car[4][3];
-  private Log[][] logs = new Log[4][3];
+    // ----- Attributes -----
 
-  // Frogger
-  private Frogger frogger;
-  private JLabel froggerLabel;
-  private ImageIcon froggerImage;
+    // Content Pane
+    private Container contentPane;
+    // Frogger
+    private Frogger frogger;
+    private JLabel froggerLabel;
+    // Sprites
+    private Car[][] cars = new Car[4][3];
+    private Log[][] logs = new Log[4][3];
+    // Points
+    private int points = 0;
+    private JLabel pointsLabel = new JLabel("  POINTS: " + points);
+    // Game Logic
+    private boolean isGameOver = false;
+    private boolean isCollisionDetected = false;
+    private boolean controlsEnabled = true;
+    // Audio
+    private Audio audio = new Audio();
 
-  // For Game Loop
-  private boolean isGameOver = false;
-  private boolean controlsEnabled = true;
-  private boolean isCollisionDetected = false;
 
-  // GUI Elements
-  // Points for keeping score
-  private int points = 0;
-  private JLabel pointsLabel = new JLabel("  Points: " + points);
-
-  // Audio
-  private Clip backgroundMusic;
-  private Clip deathSound;
-  private Clip moveSound;
-  private Clip winSound;
-  private Clip highScoreSound;
-
-  public static void main(String[] args) {
-    Main mainMenu = new Main();
-    mainMenu.setVisible(true);
-  }
-    // --- GAME WINDOW AND CONTENT ---
-  public Game() {
-    content = getContentPane(); // Initialize the content pane
-
-    playerStart();
-
-    // GUI Elements
-    // Points Label
-    pointsLabel.setBounds(455, 565, 160, 30);
-    pointsLabel.setOpaque(true);
-    pointsLabel.setBackground(Color.BLACK);
-    pointsLabel.setForeground(Color.WHITE);
-    content.add(pointsLabel);
-
-    // Quit and Save Button
-    JButton quitButton = new JButton("QUIT & SAVE");
-    quitButton.setFocusable(false);
-    quitButton.setBounds(10, 565, 160, 30);
-    quitButton.setOpaque(true);
-    quitButton.setBackground(Color.BLACK);
-    quitButton.setForeground(Color.WHITE);
-    quitButton.addActionListener(e -> {
-        isGameOver = true;
-        backgroundMusic.stop();
-        saveGame();
-        dispose();
-        Main mainMenu = new Main();
-        mainMenu.setVisible(true);
-      });
-    content.add(quitButton);
-
-    // Change Fonts
-    try {
-      Font customFont = Font.createFont(Font.TRUETYPE_FONT, new File("retroFont.ttf"));
-      customFont = customFont.deriveFont(Font.PLAIN, 16);
-      pointsLabel.setFont(customFont);
-      quitButton.setFont(customFont);
-    } catch (FontFormatException | IOException e) {
-      e.printStackTrace();
+    public static void main(String[] args) {
+        Main main = new Main();
+        main.setVisible(true);
     }
 
-    initializeCars(4, 270, 200, 100, 0, "bike.gif");
-    initializeCars(4, 400, 200, 200, 1, "car2.gif");
-    initializeCars(4, 470, 200, 400, 2, "car.gif");
+    public Game() {
+        // Create new window and set properties
+        JFrame window = new JFrame("Frogger");
+        window.setSize(Properties.SCREEN_X, Properties.SCREEN_Y);
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setResizable(false);
+        window.setLocationRelativeTo(null);
 
-    initializeLogs(4, 80, 200, 0);
-    initializeLogs(4, 144, 400, 1);
-    initializeLogs(4, 208, 800, 2);
+        window.setIconImage(getWindowIcon());
 
-    background();
+        // Container contentPane;
+        contentPane = window.getContentPane();
 
-    // Add key listener
-    content.addKeyListener(this);
+        // Initialize Audio and Start BG Music
+        audio.initializeAudio();
+        audio.playBackgroundMusic();
 
-    // Initialize and Play Audio
-    initializeAudio();
-    playBackgroundMusic();
+        // Add GUI elements to the content pane
+        contentPane.add(spawnPointsLabel());
+        contentPane.add(spawnExitButton(window));
 
-    // Start Game Loop
-    startGameLoop();
-  }
+        // Add elements to the content pane
+        contentPane.add(spawnFrogger());
 
-  public void startGameLoop() {
-    Thread gameLoop = new Thread(
-      new Runnable() {
-        @Override
-        public void run() {
-          while (!isGameOver) {
-            checkCollision();
-            try {
-              Thread.sleep(10);
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
-          }
-        }
-      }
-    );
-    gameLoop.start();
-  }
+        initializeCars(4, 250, 200, 100, 0, "bike.gif");
+        initializeCars(4, 380, 200, 200, 1, "car2.gif");
+        initializeCars(4, 440, 200, 400, 2, "car.gif");
 
-  public void background() {
-    // Create image icon for background
-    ImageIcon background = new ImageIcon(
-      getClass().getResource("images/background.png")
-    );
-    // Scale image to fit screen
-    background.setImage(
-      background
-        .getImage()
-        .getScaledInstance(
-          GameProperties.SCREEN_WIDTH,
-          GameProperties.SCREEN_HEIGHT,
-          Image.SCALE_DEFAULT
-        )
-    );
-    // Create label for background
-    JLabel backgroundLabel = new JLabel(background);
-    // Set label bounds
-    backgroundLabel.setBounds(
-      0,
-      0,
-      GameProperties.SCREEN_WIDTH,
-      GameProperties.SCREEN_HEIGHT
-    );
-    // Set frame bounds
-    setSize(GameProperties.SCREEN_WIDTH, GameProperties.SCREEN_HEIGHT);
+        initializeLogs(4, 60, 200, 0);
+        initializeLogs(4, 124, 400, 1);
+        initializeLogs(4, 188, 800, 2);
 
-    // Other JFrame properties
-    setTitle("FROGGER");
-    content.setLayout(null);
-    setResizable(false);
-    setLocationRelativeTo(null);
-    content.setFocusable(true);
+        contentPane.add(setBackground());
 
-    // Frogger JFame Icon
-    ImageIcon froggerIcon = new ImageIcon(getClass().getResource("images/frogIcon.png"));
-    if (froggerIcon.getImage() != null) {
-      setIconImage(froggerIcon.getImage());
-      System.out.println("Image loaded successfully.");
-    } else {
-      System.out.println("Image not loaded.");
-  }
+        // Add key listener
+        window.addKeyListener(this);
 
-    // Add background label to content pane
-    content.add(backgroundLabel);
-  }
+        // Some more window properties
+        window.setFocusable(true);
+        window.setVisible(true);
 
-  // ---SPRITE SPAWNING---
-  public void playerStart() {
-    // Frogger Setup
-    frogger = new Frogger(300, 530, 32, 32, "aniFrog.gif");
-    frogger.setImage("aniFrog.gif");
-    froggerLabel = new JLabel();
-    froggerImage =
-      new ImageIcon(getClass().getResource("images/" + frogger.getImage()));
-
-    froggerLabel.setIcon(froggerImage);
-    froggerLabel.setSize(frogger.getWidth(), frogger.getHeight());
-    froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
-
-    content.add(froggerLabel);
-  }
-
-  public void initializeCars(int rowSize, int height, int widthOffset, int speed, int row, String image) {
-    for (int i = 0; i < rowSize; i++) {
-      int xSpace = i * widthOffset;
-      carStart(xSpace, height, image, speed, i, row);
+        startGameLoop();
     }
-  }
 
-  public void carStart(int width, int height, String image, int speed, int indexNumber, int row) {
-    // Car Setup
-    Car car = new Car(width, height, 64, 32, image, true, speed);
+    // ----- WINDOW & GUI ELEMENTS -----
+    public JLabel setBackground() {
+        // Create background Icon
+        ImageIcon backgroundIcon = new ImageIcon("images/background.png");
+        // Set background Icon to the size of the screen
+        backgroundIcon.setImage(backgroundIcon.getImage().getScaledInstance(Properties.SCREEN_X, Properties.SCREEN_Y, Image.SCALE_DEFAULT));
+        // Create background Label from background Icon
+        JLabel backgroundLabel = new JLabel(backgroundIcon);
 
-    // Set image
-    car.setImage(image);
-    JLabel carLabel = new JLabel();
-    ImageIcon carImage = new ImageIcon(
-      getClass().getResource("images/" + car.getImage())
-    );
-
-    // Set label properties
-    carLabel.setIcon(carImage);
-    carLabel.setSize(car.getWidth(), car.getHeight());
-    carLabel.setLocation(car.getPosX(), car.getPosY());
-    car.setCarLabel(carLabel);
-
-    // Set speed
-    car.setSpeed(speed);
-
-    // Add car to content pane
-    car.setIsMoving(true);
-    car.startThread();
-    content.add(carLabel);
-
-    // Add car to array
-    cars[indexNumber][row] = car;
-  }
-
-  public void initializeLogs(int rowSize, int height, int speed, int row) {
-    for (int i = 0; i < rowSize; i++) {
-      int xSpace = i * 200;
-      logStart(xSpace, height, speed, i, row);
+        // Return background Label
+        return backgroundLabel;
     }
-  }
 
-  public void logStart(
-    int xSpace,
-    int posY,
-    int speed,
-    int indexNumber,
-    int row
-  ) {
-    // Log Setup
-    Log log = new Log(xSpace, posY, 64, 32, "log.gif", true, speed);
-
-    // Set Image
-    log.setImage("log.gif");
-    JLabel logLabel = new JLabel();
-    ImageIcon logImage = new ImageIcon(
-      getClass().getResource("images/" + log.getImage())
-    );
-
-    // Set label properties
-    logLabel.setIcon(logImage);
-    logLabel.setSize(log.getWidth(), log.getHeight());
-    logLabel.setLocation(log.getPosX(), log.getPosY());
-    log.setLogLabel(logLabel);
-
-    // Set speed
-    log.setSpeed(speed);
-
-    // Add log to content pane
-    log.setIsMoving(true);
-    log.startThread();
-    content.add(logLabel);
-
-    // Add log to array
-    logs[indexNumber][row] = log;
-  }
-
-  // ---CONTROLS AND COLLISION---
-  @Override
-  public void keyTyped(KeyEvent e) {}
-
-  @Override
-  public void keyPressed(KeyEvent e) {
-    if (controlsEnabled) {
-      // Get current x and y position
-      int x = frogger.getPosX();
-      int y = frogger.getPosY();
-
-      // On KeyEvent, update Frogger's position by 1 character step
-      if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) {
-        playMoveSound();
-        y -= GameProperties.CHARACTER_STEP;
-      } else if (
-        e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S
-      ) {
-        playMoveSound();
-        // Boundary Check for bottom
-        if (y >= 530) {
-          return;
-        }
-        y += GameProperties.CHARACTER_STEP;
-      } else if (
-        e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A
-      ) {
-        playMoveSound();
-        // Boundary Check for left
-        if (x <= 32) {
-          return;
-        }
-        x -= GameProperties.CHARACTER_STEP / 2;
-      } else if (
-        e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D
-      ) {
-        playMoveSound();
-        // Boundary Check for right
-        if (x >= 580) {
-          return;
-        }
-        x += GameProperties.CHARACTER_STEP / 2;
-      } else {
-        System.out.println("Invalid Key Pressed");
-        return;
-      }
-
-      // Update Frogger's position
-      frogger.setPosX(x);
-      frogger.setPosY(y);
-      froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+    public Image getWindowIcon() {
+        ImageIcon windowIcon = new ImageIcon("images/frogIcon.png");
+        return windowIcon.getImage();
     }
-  }
 
-  public void updatePoints() {
-    pointsLabel.setText("  Points: " + points);
-  }
+    public JLabel spawnPointsLabel() {
+        pointsLabel.setBounds(455, 565, 160, 30);
+        pointsLabel.setOpaque(true);
+        pointsLabel.setBackground(Color.BLACK);
+        pointsLabel.setForeground(Color.WHITE);
+        setFont(pointsLabel, 16);
+        return pointsLabel;
+    }
 
-  @Override
-  public void keyReleased(KeyEvent e) {}
-
-  public void checkCollision() {
-    if (!isCollisionDetected) {
-      Rectangle froggerRectangle = frogger.getRectangle();
-      for (Car[] carRow : cars) {
-        for (Car car : carRow) {
-          if (froggerRectangle.intersects(car.getRectangle())) {
-            isCollisionDetected = true;
-            System.out.println("Splat!");
-            controlsEnabled = false;
-            playDeathSound();
+    public void updatePoints(boolean pointsUp) {
+        if (pointsUp == true) {
+            points += 50;
+        } else {
             points -= 50;
-            updatePoints();
-            // Change Frogger Image
-            frogger.setImage("aniFrogRed.gif");
-            ImageIcon deadFrogger = new ImageIcon(
-              getClass().getResource("images/" + frogger.getImage())
-            );
-            froggerLabel.setIcon(deadFrogger);
-
-            // Reset Frogger (in timer) to give time for death animation and sound to play
-            TimerTask task = new TimerTask() {
-              public void run() {
-                System.out.println("Resetting Frogger");
-                frogger.setImage("aniFrog.gif");
-                ImageIcon normalFrogger = new ImageIcon(
-                  getClass().getResource("images/" + frogger.getImage())
-                );
-                froggerLabel.setIcon(normalFrogger);
-                frogger.setPosX(300);
-                frogger.setPosY(530);
-                froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
-                controlsEnabled = true;
-                isCollisionDetected = false;
-              }
-            };
-
-            Timer timer = new Timer();
-            timer.schedule(task, 300);
-          }
         }
-      }
+        pointsLabel.setText("  POINTS: " + points);
+    }
 
-      // Log Collision
-      boolean isFroggerOnLog = false;
-      for (Log[] logRow : logs) {
-        for (Log log : logRow) {
-          if (froggerRectangle.intersects(log.getRectangle())) {
-            isFroggerOnLog = true;
-            frogger.setPosX(log.getPosX() + GameProperties.LOG_SPEED);
-            froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
-            break;
-          }
+    public JButton spawnExitButton(JFrame window) {
+        JButton exitButton = new JButton("SAVE & EXIT");
+        exitButton.setFocusable(false);
+        exitButton.setBounds(10, 565, 160, 30);
+        exitButton.setOpaque(true);
+        exitButton.setBackground(Color.BLACK);
+        exitButton.setForeground(Color.WHITE);
+        exitButton.setBorder(new EmptyBorder(0,0,0,0));
+        exitButton.addActionListener(e -> {
+            isGameOver = true;
+            audio.stopBackgroundMusic();
+            saveGame();
+            window.dispose();
+            Main main = new Main();
+        });
+        setFont(exitButton, 16);
+        return exitButton;
+    }
+
+    public void setFont(JComponent component, int fontSize) {
+        try {
+            Font retroFont = Font.createFont(Font.TRUETYPE_FONT, new File("retroFont.ttf") );
+            retroFont = retroFont.deriveFont(Font.PLAIN, fontSize);
+            component.setFont(retroFont);
+        } catch (FontFormatException | IOException e) {
+            e.printStackTrace();
         }
-        if (isFroggerOnLog) {
-          break;
-        }
-      }
+    }
 
-      // Win Condition if Frogger is past river
-      if (frogger.getPosY() <= 80 && isGameOver == false) {
-        System.out.println("Victory!");
-        // Play Win Sound
-        playWinSound();
-        points += 50;
-       updatePoints();
+    // ----- SPRITES -----
+    // --- FROGGER ---
+    public JLabel spawnFrogger() {
+        frogger = new Frogger();
+        froggerLabel = new JLabel();
+        ImageIcon froggerIcon = new ImageIcon(frogger.getImage());
 
-        // Reset Frogger
-         frogger.setPosX(300);
-          frogger.setPosY(530);
-          froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
-          controlsEnabled = true;
-      }
+        froggerLabel.setIcon(froggerIcon);
+        froggerLabel.setSize(frogger.getWidth(), frogger.getHeight());
+        froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
 
-      // Check if frogger is in river but not on log
-      if (isFroggerAtRiver() && !isFroggerOnLog) {
-        isCollisionDetected = true;
-        System.out.println("Gulp!");
-        controlsEnabled = false;
-        playDeathSound();
-        points -= 50;
-         updatePoints();
+        return froggerLabel;
+    }
 
-        // Change Frogger Image
-        frogger.setImage("aniFrogRed.gif");
-        ImageIcon deadFrogger = new ImageIcon(
-          getClass().getResource("images/" + frogger.getImage())
-        );
-        froggerLabel.setIcon(deadFrogger);
+    public void resetFrogger() {
+        System.out.println("Resetting Frogger");
+        frogger.resetFrogger();
+        froggerLabel.setIcon(new ImageIcon(frogger.getImage()));
+        froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+        controlsEnabled = true;
+        isCollisionDetected = false;
+    }
 
-        // Reset Frogger (in timer) to give time for death animation and sound to play
-        TimerTask task = new TimerTask() {
+    public void froggerDeath() {
+      audio.playDeathSound();
+      froggerLabel.setIcon(new ImageIcon("images/aniFrogRed.gif"));
+      updatePoints(false);
+
+      // Timer to play death animation
+      TimerTask deathTimer = new TimerTask() {
           public void run() {
-            System.out.println("Resetting Frogger");
-            frogger.setImage("aniFrog.gif");
-            ImageIcon normalFrogger = new ImageIcon(
-              getClass().getResource("images/" + frogger.getImage())
-            );
-            froggerLabel.setIcon(normalFrogger);
-            frogger.setPosX(300);
-            frogger.setPosY(530);
-            froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
-            controlsEnabled = true;
-            isCollisionDetected = false;
+              resetFrogger();
           }
-        };
+      };
+      Timer timer = new Timer();
+      timer.schedule(deathTimer, 300);
+    }
 
-        Timer timer = new Timer();
-        timer.schedule(task, 300);
+    // ----- CARS -----
+    public void initializeCars(int rowSize, int height, int widthOffset, int speed, int row, String image) {
+        for (int i = 0; i < rowSize; i++) {
+          int xSpace = i * widthOffset;
+          carStart(xSpace, height, image, speed, i, row);
+        }
+      }
+
+    public void carStart(int width, int height, String image, int speed, int indexNumber, int row) {
+      // Car Setup
+      Car car = new Car(width, height, 64, 32, image, true, speed);
+
+      // Set image
+      car.setImage(image);
+      JLabel carLabel = new JLabel();
+      ImageIcon carImage = new ImageIcon(
+        getClass().getResource("images/" + car.getImage())
+      );
+
+      // Set label properties
+      carLabel.setIcon(carImage);
+      carLabel.setSize(car.getWidth(), car.getHeight());
+      carLabel.setLocation(car.getPosX(), car.getPosY());
+      car.setCarLabel(carLabel);
+
+      // Set speed
+      car.setSpeed(speed);
+
+      // Add car to content pane
+      car.setIsMoving(true);
+      contentPane.add(carLabel);
+      car.startThread();
+
+      // Add car to array
+      cars[indexNumber][row] = car;
+    }
+
+    // ----- LOGS -----
+    public void initializeLogs(int rowSize, int height, int speed, int row) {
+      for (int i = 0; i < rowSize; i++) {
+        int xSpace = i * 200;
+        logStart(xSpace, height, speed, i, row);
       }
     }
-  }
 
-  public boolean isFroggerAtRiver() {
-    return (frogger.getPosY() >= 80 && frogger.getPosY() <= 240);
-  }
-
-  // -----AUDIO------
-  public void initializeAudio() {
-    try {
-      // Background Music
-      File musicFile = new File("audio/music.wav");
-      AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(
-        musicFile
-      );
-      backgroundMusic = AudioSystem.getClip();
-      backgroundMusic.open(audioInputStream);
-
-      // Death Sound
-      File deathSoundFile = new File("audio/death.wav");
-      audioInputStream = AudioSystem.getAudioInputStream(deathSoundFile);
-      deathSound = AudioSystem.getClip();
-      deathSound.open(audioInputStream);
-
-      // Move Sound
-      File moveSoundFile = new File("audio/move.wav");
-      audioInputStream = AudioSystem.getAudioInputStream(moveSoundFile);
-      moveSound = AudioSystem.getClip();
-      moveSound.open(audioInputStream);
-
-      // Win Sound
-      File winSoundFile = new File("audio/victory.wav");
-      audioInputStream = AudioSystem.getAudioInputStream(winSoundFile);
-      winSound = AudioSystem.getClip();
-      winSound.open(audioInputStream);
-
-      // High Score Sound
-      File highScoreSoundFile = new File("audio/highScore.wav");
-      audioInputStream = AudioSystem.getAudioInputStream(highScoreSoundFile);
-      highScoreSound = AudioSystem.getClip();
-      highScoreSound.open(audioInputStream);
-
-    } catch (
-      UnsupportedAudioFileException | IOException | LineUnavailableException e
+    public void logStart(
+      int xSpace,
+      int posY,
+      int speed,
+      int indexNumber,
+      int row
     ) {
-      e.printStackTrace();
+      // Log Setup
+      Log log = new Log(xSpace, posY, 64, 32, "log.gif", true, speed);
+
+      // Set Image
+      log.setImage("log.gif");
+      JLabel logLabel = new JLabel();
+      ImageIcon logImage = new ImageIcon(
+        getClass().getResource("images/" + log.getImage())
+      );
+
+      // Set label properties
+      logLabel.setIcon(logImage);
+      logLabel.setSize(log.getWidth(), log.getHeight());
+      logLabel.setLocation(log.getPosX(), log.getPosY());
+      log.setLogLabel(logLabel);
+
+      // Set speed
+      log.setSpeed(speed);
+
+      // Add log to content pane
+      log.setIsMoving(true);
+      log.startThread();
+      contentPane.add(logLabel);
+
+      // Add log to array
+      logs[indexNumber][row] = log;
     }
-  }
 
-  public void playBackgroundMusic() {
-    if (backgroundMusic != null) {
-      backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+    // ----- GAME LOGIC -----
+    public void startGameLoop() {
+        Thread gameLoop = new Thread(
+            new Runnable() {
+                @Override
+                public void run() {
+                    while (!isGameOver) {
+                        checkCollision();
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        );
+        gameLoop.start();
     }
-  }
 
-  public void playMoveSound() {
-    moveSound.setFramePosition(0);
-    moveSound.start();
-  }
+    public void checkCollision() {
+        Rectangle froggerRectangle = frogger.getRectangle();
+        boolean isFroggerOnLog = false;
 
-  public void playDeathSound() {
-    if (!deathSound.isRunning()) {
-      deathSound.setFramePosition(0);
-      deathSound.start();
+        // Win Condition if Frogger is past river
+        if (frogger.getPosY() <= 32) {
+            audio.playWinSound();
+            System.out.println("Win!");
+            updatePoints(true);
+            resetFrogger();
+            return;
+        }
+
+        // Collision Detection with Logs
+        for (Log[] logRow : logs) {
+            for (Log log : logRow) {
+                if (froggerRectangle.intersects(log.getRectangle())) {
+                    isFroggerOnLog = true;
+                    frogger.setPosX(log.getPosX() + Properties.LOG_SPEED);
+                    froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
+                    break;
+                }
+            }
+            if (isFroggerOnLog) {
+                break;
+            }
+        }
+
+      // Loose Condition if Frogger in Water but not on Log
+      if (isFroggerAtRiver() && !isFroggerOnLog) {
+          if (!isCollisionDetected) {
+              System.out.println("Gulp!");
+              froggerDeath();
+              isCollisionDetected = true;
+              return;
+            }
+        } else {
+            isCollisionDetected = false;
+        }
+
+        // Collision Detection with Cars
+        if (!isCollisionDetected) {
+            for (Car[] carRow : cars) {
+                for (Car car : carRow) {
+                    if (froggerRectangle.intersects(car.getRectangle())) {
+                        isCollisionDetected = true;
+                        System.out.println("Collision with Car!");
+                        controlsEnabled = false;
+                        froggerDeath();
+
+                        // Add a delay before checking for collisions again
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
+                }
+            }
+        }
     }
-  }
 
-  public void playWinSound() {
-    if (!winSound.isRunning()) {
-      winSound.setFramePosition(0);
-      winSound.start();
+    public boolean isFroggerAtRiver() {
+        return (frogger.getPosY() >= 32 && frogger.getPosY() <= 230);
     }
-  }
 
-  public void playHighScoreSound() {
-    if (!highScoreSound.isRunning()) {
-      highScoreSound.setFramePosition(0);
-      highScoreSound.start();
+    // ----- CONTROLS -----
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (!controlsEnabled) {
+            return;
+        }
+        if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) {
+          audio.playMoveSound();
+          System.out.println("Forward Hop!");
+          frogger.moveUp();
+        } else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S) {
+          audio.playMoveSound();
+          System.out.println("Back Hop!");
+            // Boundary Check for Bottom
+          if (frogger.getPosY() >= 490) {
+              System.out.println("You Shall Not Pass!");
+              return;
+          }
+          frogger.moveDown();
+        } else if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {
+          audio.playMoveSound();
+          System.out.println("Left Hop!");
+            // Boundary Check for Left
+          if (frogger.getPosX() <= 32) {
+              System.out.println("You Shall Not Pass!");
+              return;
+          }
+          frogger.moveLeft();
+        } else if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_D) {
+          audio.playMoveSound();
+          System.out.println("Right Hop!");
+            // Boundary Check for Right
+          if (frogger.getPosX() >= 580) {
+              System.out.println("You Shall Not Pass!");
+              return;
+          }
+          frogger.moveRight();
+
+        } else if (e.getKeyCode() == KeyEvent.VK_K) {
+            System.out.println("Killing Frogger!");
+            froggerDeath();
+        } else {
+            System.out.println("Invalid Key!");
+        }
+
+        // Update froggerLabel position
+        froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
     }
-  }
 
-  // ---DATABASE ---
+    @Override
+    public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public void keyReleased(KeyEvent e) {}
+
+     // ---DATABASE ---
   public void saveGame() {
     // Get Name
-    String name = JOptionPane.showInputDialog("Enter your name: ");
+    String name = JOptionPane.showInputDialog("Enter Your Name (Cancel To Not Save Score): ");
     if (name == null) {
       System.out.println("Please enter a name");
       return;
@@ -576,7 +465,7 @@ public class Game extends JFrame implements KeyListener {
         stmt.executeUpdate(sql);
         conn.commit();
         System.out.println("Table created successfully.");
-      
+
 
         // INSERT, executeUpdate and commit
         sql = "INSERT INTO SCORES (NAME, SCORE, DATE) ";
@@ -592,7 +481,7 @@ public class Game extends JFrame implements KeyListener {
 
         // If the user's score is in the top 5
         if (count <= 5) {
-          playHighScoreSound();
+          audio.playHighScoreSound();
           JOptionPane.showMessageDialog(null, "CONGRATULATIONS, YOU'RE A TOP FIVE FROGGER!");
         }
 
@@ -603,5 +492,4 @@ public class Game extends JFrame implements KeyListener {
       e.printStackTrace();
     }
   }
-
 }

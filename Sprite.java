@@ -1,19 +1,19 @@
 import java.awt.Rectangle;
 
 public class Sprite {
-    // Variables
+    // Base Class Properties
     protected int posX, posY, width, height;
     protected String image;
     protected Rectangle rectangle;
 
-    // Default constructor
+    // Default Constructor
     public Sprite() {
-        posX = 0;
-        posY = 0;
-        width = 0;
-        height = 0;
-        image = "";
-        rectangle = new Rectangle(posX, posY, width, height);
+        this.posX = 0;
+        this.posY = 0;
+        this.width = 0;
+        this.height = 0;
+        this.image = "";
+        this.rectangle = new Rectangle(this.posX, this.posY, this.width, this.height);
     }
 
     // Secondary Constructor
@@ -23,53 +23,49 @@ public class Sprite {
         this.width = width;
         this.height = height;
         this.image = image;
-        rectangle = new Rectangle(posX, posY, width, height);
+        this.rectangle = new Rectangle(this.posX, this.posY, this.width, this.height);
     }
 
     // Getters
     public int getPosX() {
-        return posX;
+        return this.posX;
     }
     public int getPosY() {
-        return posY;
+        return this.posY;
     }
     public int getWidth() {
-        return width;
+        return this.width;
     }
     public int getHeight() {
-        return height;
+        return this.height;
     }
     public String getImage() {
-        return image;
+        return this.image;
     }
     public Rectangle getRectangle() {
-        return rectangle;
+        return this.rectangle;
     }
 
     // Setters
     public void setPosX(int posX) {
         this.posX = posX;
-        rectangle.setLocation(posX, posY);
+        this.rectangle.setLocation(this.posX, this.posY);
     }
-
     public void setPosY(int posY) {
         this.posY = posY;
-        rectangle.setLocation(posX, posY);
+        this.rectangle.setLocation(this.posX, this.posY);
     }
-
     public void setWidth(int width) {
         this.width = width;
-        rectangle.setSize(width, height);
     }
-
     public void setHeight(int height) {
         this.height = height;
-        rectangle.setSize(width, height);
     }
-
     public void setImage(String image) {
         this.image = image;
     }
-
+    public void setRectangle(Rectangle rectangle) {
+        this.rectangle = rectangle;
+    }
 
 }

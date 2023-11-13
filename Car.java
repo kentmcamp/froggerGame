@@ -77,19 +77,19 @@ public class Car extends Sprite implements Runnable
             int x = this.getPosX(); // Get current x position
 
             if (this.speed == 200) {
-                x += GameProperties.CAR_SPEED; // Reverse speed
+                x += Properties.CAR_SPEED; // Reverse speed
             } else {
-                x -= GameProperties.CAR_SPEED; // Subtract speed from x position
+                x -= Properties.CAR_SPEED; // Subtract speed from x position
             }
 
             this.setPosX(x); // Set new x position
             carLabel.setLocation(x, this.getPosY()); // Update label position
 
-            if (x > GameProperties.SCREEN_WIDTH + 32) { // If car is off screen + 32 pixels
+            if (x > Properties.SCREEN_Y + 32) { // If car is off screen + 32 pixels
                 x = -this.getWidth(); // Reset x position
                 this.setPosX(x); // Set new x position
             } else if (x < -this.getWidth() - 32) { // If car is off screen + 32 pixels
-                x = GameProperties.SCREEN_WIDTH; // Reset x position
+                x = Properties.SCREEN_X; // Reset x position
                 this.setPosX(x); // Set new x position
             }
 

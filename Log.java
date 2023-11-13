@@ -75,19 +75,19 @@ public class Log extends Sprite implements Runnable{
             int x = this.getPosX();
 
             if (this.speed == 200) {
-                x += GameProperties.LOG_SPEED; // Reverse speed
+                x += Properties.LOG_SPEED; // Reverse speed
             } else {
-                x -= GameProperties.LOG_SPEED; // Subtract speed from x position
+                x -= Properties.LOG_SPEED; // Subtract speed from x position
             }
 
             this.setPosX(x); // Update x position
             logLabel.setLocation(x, this.getPosY()); // Update label location
 
-            if (x > GameProperties.SCREEN_HEIGHT + 32) {
+            if (x > Properties.SCREEN_Y + 32) {
                 x = -this.getWidth();
                 this.setPosX(x);
             } else if (x < -this.getWidth() - 32) {
-                x = GameProperties.SCREEN_WIDTH;
+                x = Properties.SCREEN_X;
                 this.setPosX(x);
             }
 
@@ -105,6 +105,6 @@ public class Log extends Sprite implements Runnable{
         throw new UnsupportedOperationException("Unimplemented method 'run'");
     }
 
-    
+
 
 }

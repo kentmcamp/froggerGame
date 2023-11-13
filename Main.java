@@ -11,26 +11,25 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 public class Main extends JFrame {
 
     private JLabel[] scoreLabels = new JLabel[5];
-    private Clip backgroundMusic;
+    private Audio audio = new Audio();
 
     public Main() {
         this.setTitle("FROGGER");
-        this.setSize(GameProperties.SCREEN_WIDTH, GameProperties.SCREEN_HEIGHT);
+        this.setSize(Properties.SCREEN_X, Properties.SCREEN_Y);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
         this.setLocationRelativeTo(null);
+
+        // Stop High Score Music if it's playing
+        audio.stopHighScoreSound();
+        audio.initializeAudio();
+        audio.playMenuMusic();
 
         // Frogger JFame Icon
         ImageIcon froggerIcon = new ImageIcon(getClass().getResource("images/frogIcon.png"));
@@ -40,7 +39,6 @@ public class Main extends JFrame {
         } else {
             System.out.println("Image not loaded.");
         }
-
 
         // Main Content Pane
         JPanel mainContent = new JPanel();
@@ -86,11 +84,9 @@ public class Main extends JFrame {
         startButton.setBackground(Color.GREEN);
         startButton.setForeground(Color.BLACK);
         startButton.addActionListener(e -> {
-            backgroundMusic.stop();
+            audio.stopMenuMusic();
             this.dispose();
             Game game = new Game();
-            game.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            game.setVisible(true);
         });
 
         JButton exitButton = new JButton("EXIT");
@@ -122,8 +118,6 @@ public class Main extends JFrame {
         bottomPanel.add(new JLabel(" "));
         bottomPanel.add(new JLabel(" "));
 
-
-
         for (int i = 0; i < 5; i++) {
             Box scoreBox = Box.createVerticalBox();
 
@@ -134,11 +128,8 @@ public class Main extends JFrame {
             bottomPanel.add(scoreBox);
         }
 
-        playMusic();
         updateScores();
         bottomPanel.add(Box.createVerticalGlue());
-
-
 
         try {
             Font titleFont = Font.createFont(Font.TRUETYPE_FONT, new File("retroFont.ttf"));
@@ -160,14 +151,10 @@ public class Main extends JFrame {
             for (int i = 0; i < 5; i++) {
                 scoreLabels[i].setFont(scoreFont);
             }
-
-
         } catch (IOException | FontFormatException e) {
             e.printStackTrace();
         }
-
         this.setVisible(true);
-
     }
 
         public void updateScores() {
@@ -214,23 +201,5 @@ public class Main extends JFrame {
                 e.printStackTrace();
             }
         }
-    }
-
-    // Background Music
-    private void playMusic() {
-      try {
-        File musicFile = new File("audio/menuMusic.wav");
-        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(musicFile);
-        backgroundMusic = AudioSystem.getClip();
-        backgroundMusic.open(audioInputStream);
-      } catch (
-      UnsupportedAudioFileException | IOException | LineUnavailableException e
-    ) {
-      e.printStackTrace();
-    }
-
-    if (backgroundMusic != null) {
-        backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
-      }
     }
 }
