@@ -310,7 +310,7 @@ public class Game implements KeyListener{
             for (Log log : logRow) {
                 if (froggerRectangle.intersects(log.getRectangle())) {
                     isFroggerOnLog = true;
-                    frogger.setPosX(log.getPosX() + Properties.LOG_SPEED);
+                    frogger.setPosX(log.getPosX() + Properties.LOG_SPEED + 8);
                     froggerLabel.setLocation(frogger.getPosX(), frogger.getPosY());
                     break;
                 }
