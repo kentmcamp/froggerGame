@@ -338,7 +338,7 @@ public class Game implements KeyListener{
                 for (Car car : carRow) {
                     if (froggerRectangle.intersects(car.getRectangle())) {
                         isCollisionDetected = true;
-                        System.out.println("Collision with Car!");
+                        System.out.println("Splat!");
                         controlsEnabled = false;
                         froggerDeath();
 
@@ -397,9 +397,6 @@ public class Game implements KeyListener{
           }
           frogger.moveRight();
 
-        } else if (e.getKeyCode() == KeyEvent.VK_K) {
-            System.out.println("Killing Frogger!");
-            froggerDeath();
         } else {
             System.out.println("Invalid Key!");
         }
